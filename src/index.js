@@ -14,47 +14,42 @@ const port = process.env.PORT || 3000;
 app.use(express.json({ urlencoded: true }));
 
 // create a new user resource creation
-app.post("/user", (req, res) => {
+app.post("/user", async (req, res) => {
   // create new user
   const newUser = new User(req.body);
 
-  // save new user into the database
-  newUser
-    .save()
-    .then((result) => {
-      return res.send(newUser);
-    })
-    .catch((err) => {
-      res.status(400).send(err);
-    });
+  try {
+    await newUser.save();
+    res.status(201).send(newUser);
+  } catch (e) {
+    res.status(404).send(e);
+  }
 });
 
 // get all users in the database
-app.get("/users", (req, res) => {
-  const getAllUsers = User.find({});
-  getAllUsers
-    .then((users) => {
-      res.status(200).send(users);
-    })
-    .catch((err) => {
-      res.status(400).send(err);
-    });
+app.get("/users", async (req, res) => {
+  try {
+    const users = await User.find({});
+    res.status(200).send(users);
+  } catch (e) {
+    res.status(404).send(e);
+  }
 });
 
 // get specific user
-app.get("/users/:id", (req, res) => {
+app.get("/users/:id", async (req, res) => {
   const _id = req.params.id;
-  User.findById(_id)
-    .then((user) => {
-      if (!user) {
-        return res.status(404).send("User not found!");
-      }
 
-      res.send(user);
-    })
-    .catch((err) => {
-      res.status(400).send(err);
-    });
+  try {
+    const user = await User.findById(_id);
+    if (!user) {
+      return res.status(404).send(`user with the ${_id} not found!`);
+    }
+
+    res.status(200).send(user);
+  } catch (e) {
+    res.status(500).send("internal server error");
+  }
 });
 
 // create a new task resource
