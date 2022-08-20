@@ -1,0 +1,12 @@
+{
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "editor.formatOnPaste": true,
+    "prettier.documentSelectors": [
+        ".js"
+    ],
+    "editor.fontFamily": "menlo",
+    "editor.fontSize": 14.5,
+    "editor.lineHeight": 1.3,
+    "liveServer.settings.AdvanceCustomBrowserCmdLine": ""
+}
