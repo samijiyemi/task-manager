@@ -1,7 +1,7 @@
 const express = require("express");
-const router = express.Router();
-
 const User = require("../model/users");
+
+const router = express.Router();
 
 // create a new user resource creation
 router.post("/", async (req, res) => {
@@ -12,7 +12,7 @@ router.post("/", async (req, res) => {
     await newUser.save();
     res.status(201).send(newUser);
   } catch (e) {
-    res.status(404).send(e);
+    res.status(400).send(e);
   }
 });
 
@@ -20,7 +20,7 @@ router.post("/", async (req, res) => {
 router.get("/", async (req, res) => {
   try {
     const users = await User.find({});
-    res.status(200).send(users);
+    res.send(users);
   } catch (e) {
     res.status(404).send(e);
   }
@@ -43,31 +43,33 @@ router.get("/:id", async (req, res) => {
 });
 
 // Update a user in the database
-router.patch("/:id", async (req, res) => {
+router.patch("/users/:id", async (req, res) => {
   const updates = Object.keys(req.body);
-  const allowUpdates = ["age", "name", "email", "password"];
-  const allowedOperations = updates.every((update) => {
+  const allowUpdates = ["name", "age", "email", "password"];
+  const isValidOperation = updates.every((update) => {
     allowUpdates.includes(update);
   });
 
-  if (!allowedOperations) {
-    res.status(404).send({ error: "invalid update" });
+  if (!isValidOperation) {
+    return res.status(400).send({ error: "invalid update" });
   }
 
   try {
     const users = await User.findById(req.params.id);
 
-    updates.forEach((update) => (users[update] = req.body[update]));
+    updates.forEach((update) => {
+      users[update] = req.body[update];
+    });
 
     await users.save();
 
     if (!users) {
-      return res.status(404).send("user not found!");
+      return res.status(404).send();
     }
 
-    res.status(200).send(users);
+    res.send(users);
   } catch (e) {
-    res.status(500).send("internal server error");
+    res.status(500).send(e);
   }
 });
 
