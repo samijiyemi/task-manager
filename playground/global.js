@@ -1,12 +1,9 @@
-const readline = require("readline");
-const { log } = require("util");
+const sumUpTo = (n) => {
+  let total = 0;
+  for (let i = 1; i < n; i++) {
+    total += 1;
+  }
+  return total;
+};
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-});
-
-rl.question("do you like programming? ", (answer) => {
-  log(`your answer is: ${answer}`);
-  process.exit();
-});
+console.log(sumUpTo(10));

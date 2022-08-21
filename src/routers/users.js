@@ -55,10 +55,12 @@ router.patch("/:id", async (req, res) => {
   }
 
   try {
-    const users = await User.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    const users = await User.findById(req.params.id);
+
+    updates.forEach((update) => (users[update] = req.body[update]));
+
+    await users.save();
+
     if (!users) {
       return res.status(404).send("user not found!");
     }
