@@ -1,9 +1,10 @@
 /*
-@params author ogbenisamu
+@params {sting} 
 */
 const mongoose = require("mongoose");
+const schema = mongoose.Schema;
 
-const Task = mongoose.model("Task", {
+const taskSchema = new schema({
   description: {
     type: String,
     required: true,
@@ -16,5 +17,12 @@ const Task = mongoose.model("Task", {
   },
   completed: { type: Boolean, default: false },
 });
+
+taskSchema.pre("save", async function (next) {
+  const task = this;
+  next();
+});
+
+const Task = mongoose.model("Task", taskSchema);
 
 module.exports = Task;

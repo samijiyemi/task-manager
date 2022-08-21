@@ -16,6 +16,18 @@ router.post("/", async (req, res) => {
   }
 });
 
+// Endpoint for use login
+router.post("/login", async (req, res) => {
+  try {
+    const user = await User.findUserbyCredentials(
+      req.body.email,
+      req.body.password
+    );
+
+    res.send(user);
+  } catch (e) {}
+});
+
 // get all users in the database
 router.get("/", async (req, res) => {
   try {
@@ -43,31 +55,34 @@ router.get("/:id", async (req, res) => {
 });
 
 // Update a user in the database
-router.patch("/users/:id", async (req, res) => {
+router.patch("/:id", async (req, res) => {
   const updates = Object.keys(req.body);
   const allowUpdates = ["name", "age", "email", "password"];
   const isValidOperation = updates.every((update) => {
-    allowUpdates.includes(update);
+    const check = allowUpdates.includes(update);
+    return check;
   });
+
+  // console.log(isValidOperation);
 
   if (!isValidOperation) {
     return res.status(400).send({ error: "invalid update" });
   }
 
   try {
-    const users = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id);
 
-    updates.forEach((update) => {
-      users[update] = req.body[update];
+    updates.forEach((item) => {
+      user[item] = req.body[item];
     });
 
-    await users.save();
+    await user.save();
 
-    if (!users) {
+    if (!user) {
       return res.status(404).send();
     }
 
-    res.send(users);
+    res.send(user);
   } catch (e) {
     res.status(500).send(e);
   }

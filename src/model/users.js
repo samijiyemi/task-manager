@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema({
   },
   age: {
     type: Number,
+    required: true,
     default: 0,
     validate(value) {
       if (value < 0) {
@@ -20,6 +21,7 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
+    unique: true,
     required: true,
     trim: true,
     lowercase: true,
@@ -43,10 +45,24 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+userSchema.statics.findUserbyCredentials = async (email, password) => {
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new Error("invalid login details");
+  }
+
+  const isMatch = await bcrypt.compare(password, this.password);
+
+  if (!isMatch) {
+    throw new Error("invalid login details");
+  }
+
+  return user;
+};
+
 userSchema.pre("save", async function (next) {
   const user = this;
-
-  console.log(user);
 
   if (user.isModified("password")) {
     user.password = await bcrypt.hash(user.password, 8);
