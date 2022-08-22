@@ -1,31 +1,21 @@
 const express = require("express");
+const bcrypt = require('bcrypt')
 const User = require("../model/users");
 
 const router = express.Router();
 
 // create a new user resource creation
 router.post("/", async (req, res) => {
-  // create new user
-  const newUser = new User(req.body);
-
   try {
-    await newUser.save();
+    // create new user
+    let newUser = new User(req.body);
+
+    newUser = await newUser.save();
     res.status(201).send(newUser);
   } catch (e) {
+    console.log(e)
     res.status(400).send(e);
   }
-});
-
-// Endpoint for use login
-router.post("/login", async (req, res) => {
-  try {
-    const user = await User.findUserbyCredentials(
-      req.body.email,
-      req.body.password
-    );
-
-    res.send(user);
-  } catch (e) {}
 });
 
 // get all users in the database
@@ -34,7 +24,7 @@ router.get("/", async (req, res) => {
     const users = await User.find({});
     res.send(users);
   } catch (e) {
-    res.status(404).send(e);
+    res.status(400).send(e);
   }
 });
 
@@ -50,7 +40,7 @@ router.get("/:id", async (req, res) => {
 
     res.status(200).send(user);
   } catch (e) {
-    res.status(500).send("internal server error");
+    res.status(400).send("internal server error");
   }
 });
 
@@ -79,12 +69,39 @@ router.patch("/:id", async (req, res) => {
     await user.save();
 
     if (!user) {
-      return res.status(404).send();
+      return res.status(400).send();
     }
 
     res.send(user);
   } catch (e) {
-    res.status(500).send(e);
+    res.status(400).send(e);
+  }
+});
+
+// Endpoint for use login
+router.post("/login", async (req, res) => {
+  try {
+    // const user = await User.findByCredentials(
+    //   req.body.email,
+    //   req.body.password
+    // );
+
+    const userInDb = await User.findOne({ email: req.body.email })
+
+    if (!userInDb) {
+      return res.status(400).json({ message: 'Invalid credentials'})
+    }
+
+    const isMatch = await bcrypt.compare(req.body.password, userInDb.password)
+
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Incorrect password'})
+    }
+
+    res.send(userInDb);
+  } catch (e) {
+    console.log(e);
+    res.status(404).send("Invalid details");
   }
 });
 

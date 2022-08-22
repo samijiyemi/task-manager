@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 
 // User Schema
 const userSchema = new mongoose.Schema({
@@ -34,9 +34,6 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
-    minlength: 7,
-    trim: true,
-    lowercase: true,
     validate(value) {
       if (value.includes("password")) {
         throw new Error(`Password must not include 'password'`);
@@ -45,17 +42,24 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-userSchema.statics.findUserbyCredentials = async (email, password) => {
+userSchema.statics.findByCredentials = async (email, password) => {
   const user = await User.findOne({ email });
 
   if (!user) {
     throw new Error("invalid login details");
   }
 
-  const isMatch = await bcrypt.compare(password, this.password);
+
+  console.log(user.password)
+
+  const isMatch = await bcrypt.compare(
+    password,
+    "$2a$10$0ukuuyhk8b33zmxd/xgu8efbv1zkycijhgl1kj3rk2ln6z8ux6coy"
+  );
+  console.log(isMatch);
 
   if (!isMatch) {
-    throw new Error("invalid login details");
+    throw new Error("incorrect password");
   }
 
   return user;
@@ -65,7 +69,8 @@ userSchema.pre("save", async function (next) {
   const user = this;
 
   if (user.isModified("password")) {
-    user.password = await bcrypt.hash(user.password, 8);
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(user.password, salt);
   }
 
   next();

@@ -1,11 +1,12 @@
 const express = require("express");
+const bodyParser = require("body-parser");
 require("./db/mongoose");
 
 const app = express();
-const port = process.env.PORT || 3000;
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 // use income json request
-app.use(express.json());
 
 // User Routes
 const userRouter = require("./routers/users");
@@ -15,6 +16,11 @@ const taskRouter = require("./routers/tasks");
 app.use("/users", userRouter);
 app.use("/tasks", taskRouter);
 
+app.use((err, req, res, next) => {
+  return res.status(500).json({ message: err.message });
+});
+
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log("server is up on port " + port);
 });
