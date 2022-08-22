@@ -1,20 +1,28 @@
 const express = require("express");
-const bcrypt = require('bcrypt')
+const bcrypt = require("bcrypt");
 const User = require("../model/users");
 
 const router = express.Router();
 
+// userValidation Helper
+const { userAuth } = require("../../helper/userValidation");
+
 // create a new user resource creation
 router.post("/", async (req, res) => {
   try {
-    // create new user
-    let newUser = new User(req.body);
+    // validate user input before saving into database
+    const validateUser = await userAuth.validateAsync(req.body);
+
+    if (!validateUser) {
+      return res.status(400).json(validateUser.details[0].message);
+    }
+
+    let newUser = new User(validateUser);
 
     newUser = await newUser.save();
     res.status(201).send(newUser);
   } catch (e) {
-    console.log(e)
-    res.status(400).send(e);
+    res.status(400).json(e.details[0].message);
   }
 });
 
@@ -81,26 +89,20 @@ router.patch("/:id", async (req, res) => {
 // Endpoint for use login
 router.post("/login", async (req, res) => {
   try {
-    // const user = await User.findByCredentials(
-    //   req.body.email,
-    //   req.body.password
-    // );
-
-    const userInDb = await User.findOne({ email: req.body.email })
+    const userInDb = await User.findOne({ email: req.body.email });
 
     if (!userInDb) {
-      return res.status(400).json({ message: 'Invalid credentials'})
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(req.body.password, userInDb.password)
+    const isMatch = await bcrypt.compare(req.body.password, userInDb.password);
 
     if (!isMatch) {
-      return res.status(400).json({ message: 'Incorrect password'})
+      return res.status(400).json({ message: "Incorrect password" });
     }
 
     res.send(userInDb);
   } catch (e) {
-    console.log(e);
     res.status(404).send("Invalid details");
   }
 });

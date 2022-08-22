@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const validator = require("validator");
 const bcrypt = require("bcrypt");
 
 // User Schema
@@ -25,11 +24,6 @@ const userSchema = new mongoose.Schema({
     required: true,
     trim: true,
     lowercase: true,
-    validate(value) {
-      if (!validator.isEmail(value)) {
-        throw new Error("Email is invalid!");
-      }
-    },
   },
   password: {
     type: String,
@@ -49,14 +43,7 @@ userSchema.statics.findByCredentials = async (email, password) => {
     throw new Error("invalid login details");
   }
 
-
-  console.log(user.password)
-
-  const isMatch = await bcrypt.compare(
-    password,
-    "$2a$10$0ukuuyhk8b33zmxd/xgu8efbv1zkycijhgl1kj3rk2ln6z8ux6coy"
-  );
-  console.log(isMatch);
+  const isMatch = await bcrypt.compare(password, user.password);
 
   if (!isMatch) {
     throw new Error("incorrect password");
