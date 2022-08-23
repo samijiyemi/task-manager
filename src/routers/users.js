@@ -57,11 +57,9 @@ router.patch("/:id", async (req, res) => {
   const updates = Object.keys(req.body);
   const allowUpdates = ["name", "age", "email", "password"];
   const isValidOperation = updates.every((update) => {
-    const check = allowUpdates.includes(update);
-    return check;
+    const checkBodyRequest = allowUpdates.includes(update);
+    return checkBodyRequest;
   });
-
-  // console.log(isValidOperation);
 
   if (!isValidOperation) {
     return res.status(400).send({ error: "invalid update" });
