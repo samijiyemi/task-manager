@@ -1,4 +1,5 @@
 const express = require("express");
+const morgan = require("morgan");
 const bodyParser = require("body-parser");
 require("./db/mongoose");
 
@@ -16,26 +17,13 @@ const taskRouter = require("./routers/tasks");
 app.use("/users", userRouter);
 app.use("/tasks", taskRouter);
 
+app.use(morgan("combined"));
+
 app.use((err, req, res, next) => {
   return res.status(500).json({ message: err.message });
 });
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log("Ready✅");
+  console.log("Ready on port " + port);
 });
-
-const jwt = require("jsonwebtoken");
-
-const myFunction = async () => {
-  const token = jwt.sign({ _id: "abcd1234" }, "thisismysecerettoken", {
-    expiresIn: "7 days",
-  });
-  console.log(token);
-
-  // verify the token
-  const data = jwt.verify(token, "thisismysecerettoken");
-  console.log(data);
-};
-
-myFunction();
