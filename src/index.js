@@ -22,5 +22,20 @@ app.use((err, req, res, next) => {
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log("server is up on port " + port);
+  console.log("Ready✅");
 });
+
+const jwt = require("jsonwebtoken");
+
+const myFunction = async () => {
+  const token = jwt.sign({ _id: "abcd1234" }, "thisismysecerettoken", {
+    expiresIn: "7 days",
+  });
+  console.log(token);
+
+  // verify the token
+  const data = jwt.verify(token, "thisismysecerettoken");
+  console.log(data);
+};
+
+myFunction();

@@ -89,7 +89,11 @@ router.patch("/:id", async (req, res) => {
 // Endpoint for use login
 router.post("/login", async (req, res) => {
   try {
-    const userInDb = await User.findOne({ email: req.body.email });
+    const userInDb = await User.findByCredentials(
+      req.body.email,
+      req.body.password
+    );
+    const token = await userInDb.generateAuthToken();
 
     if (!userInDb) {
       return res.status(400).json({ message: "Invalid credentials" });
@@ -101,7 +105,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Incorrect password" });
     }
 
-    res.send(userInDb);
+    res.status(200).json({ userInDb, token });
   } catch (e) {
     res.status(404).send("Invalid details");
   }

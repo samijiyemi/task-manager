@@ -1,15 +1,14 @@
-const list = [];
+"use strict";
+const fs = require("fs");
+const spawn = require("child_process").spawn;
+const filename = process.argv[2];
 
-for (let i = 1; i < 100; i++) {
-  if (!(i % 15)) {
-    list.push("FizzBuzz");
-  } else if (!(i % 5)) {
-    list.push("Buzz");
-  } else if (!(i % 3)) {
-    list.push("Fizz");
-  } else {
-    list.push(i);
-  }
+if (!filename) {
+  throw new Error(`A file to watch must be specified`);
 }
 
-console.log(list);
+fs.watch(filename, () => {
+  const ls = spawn("pwd", ["pwd", filename]);
+  ls.stdout.pipe(process.stdout);
+});
+console.log(`Now watching ${filename} for changes.........`);
