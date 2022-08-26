@@ -30,7 +30,7 @@ router.post("/", async (req, res) => {
 
     const token = await newUser.generateAuthToken();
 
-    res.status(200).send({ newUser, token });
+    res.status(200).send({ newUser });
   } catch (e) {
     res.status(400).json(e);
   }
@@ -58,7 +58,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Update a user in the database
-router.patch("/:id", async (req, res) => {
+router.patch("/me", auth, async (req, res) => {
   const updates = Object.keys(req.body);
   const allowUpdates = ["name", "age", "email", "password"];
   const isValidOperation = updates.every((update) => {
@@ -71,19 +71,15 @@ router.patch("/:id", async (req, res) => {
   }
 
   try {
-    const user = await User.findById(req.params.id);
+    updates.forEach((item) => (req.user[item] = req.body[item]));
 
-    updates.forEach((item) => {
-      user[item] = req.body[item];
-    });
+    await req.user.save();
 
-    await user.save();
-
-    if (!user) {
+    if (!req.user) {
       return res.status(400).send();
     }
 
-    res.send(user);
+    res.send(req.user);
   } catch (e) {
     res.status(400).send(e);
   }
@@ -108,7 +104,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Incorrect password" });
     }
 
-    res.status(200).json({ userInDb, token });
+    res.status(200).json({ userInDb });
   } catch (e) {
     res.status(404).send("Invalid details");
   }
@@ -129,13 +125,23 @@ router.post("/logout", auth, async (req, res) => {
   }
 });
 
-// Endpoint to delete user
-router.delete("/:id", async (req, res) => {
+// Endpoint to log all userout
+router.post("/logoutall", auth, async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: "user not found!" });
-    }
+    req.user.tokens = [];
+
+    await req.user.save();
+
+    res.send({ message: "user logout from all devices" });
+  } catch (e) {
+    res.status(500).send({ message: "unable to logout user from all devices" });
+  }
+});
+
+// Endpoint to delete user
+router.delete("/me", auth, async (req, res) => {
+  try {
+    await req.user.remove();
 
     res.status(200).json({ message: "user deleted" });
   } catch (e) {
