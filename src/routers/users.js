@@ -1,13 +1,14 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const User = require("../model/users");
+const auth = require("../middleware/auth");
 
 const router = express.Router();
 
 // userValidation Helper
 const { userAuth } = require("../../helper/userValidation");
 
-// create a new user resource creation
+// Endpoint to create a new user
 router.post("/", async (req, res) => {
   try {
     // validate user input before saving into database
@@ -19,21 +20,25 @@ router.post("/", async (req, res) => {
 
     let newUser = new User(validateUser);
 
-    newUser = await newUser.save();
-    res.status(201).send(newUser);
+    // check for existing user in the database before saving
+    const userExists = await User.findOne({ email: req.body.email });
+    if (userExists) {
+      return res.status(400).json(req.body.name + " already exists");
+    }
+
+    await newUser.save();
+
+    const token = await newUser.generateAuthToken();
+
+    res.status(200).send({ newUser, token });
   } catch (e) {
-    res.status(400).json(e.details[0].message);
+    res.status(400).json(e);
   }
 });
 
-// get all users in the database
-router.get("/", async (req, res) => {
-  try {
-    const users = await User.find({});
-    res.send(users);
-  } catch (e) {
-    res.status(400).send(e);
-  }
+// get all profile user in the database
+router.get("/me", auth, async (req, res) => {
+  res.send(req.user);
 });
 
 // get specific user
@@ -109,15 +114,32 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Endpoint to logout user
+router.post("/logout", auth, async (req, res) => {
+  try {
+    req.user.tokens = req.user.tokens.filter((token) => {
+      return token.token !== req.token;
+    });
+
+    await req.user.save();
+
+    res.send(`${req.user.name} Logout Successfully!`);
+  } catch (e) {
+    res.status(500).send();
+  }
+});
+
 // Endpoint to delete user
 router.delete("/:id", async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
     if (!user) {
-      res.status(404).send();
+      return res.status(404).json({ message: "user not found!" });
     }
+
+    res.status(200).json({ message: "user deleted" });
   } catch (e) {
-    res.status(500).send();
+    res.status(500).json({ message: e });
   }
 });
 

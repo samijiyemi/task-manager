@@ -9,6 +9,6 @@ mongoose.connect(
       throw new Error("Unable to connect to the database");
     }
 
-    console.log(resultData.name, "Database connected successfully!");
+    console.log("connected to the database");
   }
 );
