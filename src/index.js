@@ -2,9 +2,19 @@ const express = require("express");
 const multer = require("multer");
 require("./db/mongoose");
 
-// Uploaded File
+// Uploaded File Middleware
 const upload = multer({
   dest: "images",
+  limits: {
+    fileSize: 2000000,
+  },
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(doc|docx)$/)) {
+      return cb(new Error("Please upload a word document..."));
+    }
+
+    cb(null, true);
+  },
 });
 
 const app = express();
@@ -23,9 +33,9 @@ app.use("/users", require("./routers/users"));
 // Route Handler for Task
 app.use("/tasks", require("./routers/tasks"));
 
-// Error hanlder
+// Error Handler
 app.use((err, req, res, next) => {
-  return res.status(500).json({ message: err.message });
+  res.status(500).send({ message: err.message });
 });
 
 app.listen(port, () => {

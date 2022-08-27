@@ -1,12 +1,9 @@
 const express = require("express");
+const sharp = require("sharp");
 const multer = require("multer");
 const bcrypt = require("bcrypt");
 const User = require("../model/users");
 const auth = require("../middleware/auth");
-
-const avatar = multer({
-  dest: "avatar",
-});
 
 const router = express.Router();
 
@@ -143,9 +140,37 @@ router.post("/logoutall", auth, async (req, res) => {
   }
 });
 
+const upload = multer({
+  limits: {
+    fileSize: 1000000,
+  },
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+      return cb(new Error("please file must be an image format"));
+    }
+
+    cb(null, true);
+  },
+});
+
 // Endpoint to upload avatar
-router.post("/me/avatar", avatar.single("avatar"), async (req, res) => {
-  res.send("Avatar Uploaded Sucessfully!");
+router.post("/me/avatar", auth, upload.single("avatar"), async (req, res) => {
+  const buffer = await sharp(req.file.buffer)
+    .resize({ width: 250, height: 250 })
+    .png()
+    .toBuffer();
+
+  req.user.avatar = buffer;
+  await req.user.save();
+  res.send();
+});
+
+// Endpoint to delete use avatar
+router.delete("/me/avatar", auth, async (req, res) => {
+  req.user.avatar = undefined;
+
+  await req.user.save();
+  res.send("avatar deleted!");
 });
 
 // Endpoint to delete user

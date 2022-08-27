@@ -11,6 +11,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
     age: {
       type: Number,
       required: true,
@@ -45,6 +46,9 @@ const userSchema = new mongoose.Schema(
         },
       },
     ],
+    avatar: {
+      type: Buffer,
+    },
   },
   {
     timestamps: true,
@@ -58,6 +62,18 @@ userSchema.virtual("tasks", {
   foreignField: "author",
 });
 
+// Public Profile Method
+userSchema.methods.toJSON = function () {
+  const user = this;
+
+  const userObject = user.toObject();
+
+  delete userObject.password;
+  delete userObject.tokens;
+
+  return userObject;
+};
+
 // Json web token methods for user authentication
 userSchema.methods.generateAuthToken = async function () {
   const user = this;
@@ -68,17 +84,6 @@ userSchema.methods.generateAuthToken = async function () {
   await user.save();
 
   return token;
-};
-
-// Public Profile Method
-userSchema.methods.toJSON = function () {
-  const user = this;
-  const userObject = user.toObject();
-
-  delete userObject.password;
-  delete userObject.tokens;
-
-  return userObject;
 };
 
 userSchema.statics.findByCredentials = async (email, password) => {
