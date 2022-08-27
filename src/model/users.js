@@ -1,48 +1,61 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const Task = require("./tasks");
 
 // User Schema
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  age: {
-    type: Number,
-    required: true,
-    default: 0,
-    validate(value) {
-      if (value < 0) {
-        throw new Error("Input must be a positive number");
-      }
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
     },
-  },
-  email: {
-    type: String,
-    unique: true,
-    required: true,
-    trim: true,
-    lowercase: true,
-  },
-  password: {
-    type: String,
-    required: true,
-    validate(value) {
-      if (value.includes("password")) {
-        throw new Error(`Password must not include 'password'`);
-      }
-    },
-  },
-  tokens: [
-    {
-      token: {
-        type: String,
-        required: true,
+    age: {
+      type: Number,
+      required: true,
+      default: 0,
+      validate(value) {
+        if (value < 0) {
+          throw new Error("Input must be a positive number");
+        }
       },
     },
-  ],
+    email: {
+      type: String,
+      unique: true,
+      required: true,
+      trim: true,
+      lowercase: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      validate(value) {
+        if (value.includes("password")) {
+          throw new Error(`Password must not include 'password'`);
+        }
+      },
+    },
+    tokens: [
+      {
+        token: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+  },
+  {
+    timestamps: true,
+  }
+);
+
+// setting up virtual
+userSchema.virtual("tasks", {
+  ref: "Task",
+  localField: "_id",
+  foreignField: "author",
 });
 
 // Json web token methods for user authentication
@@ -91,6 +104,14 @@ userSchema.pre("save", async function (next) {
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(user.password, salt);
   }
+
+  next();
+});
+
+userSchema.pre("remove", async function (next) {
+  const user = this;
+
+  await Task.deleteMany({ author: user._id });
 
   next();
 });
