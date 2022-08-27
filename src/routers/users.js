@@ -1,7 +1,12 @@
 const express = require("express");
+const multer = require("multer");
 const bcrypt = require("bcrypt");
 const User = require("../model/users");
 const auth = require("../middleware/auth");
+
+const avatar = multer({
+  dest: "avatar",
+});
 
 const router = express.Router();
 
@@ -136,6 +141,11 @@ router.post("/logoutall", auth, async (req, res) => {
   } catch (e) {
     res.status(500).send({ message: "unable to logout user from all devices" });
   }
+});
+
+// Endpoint to upload avatar
+router.post("/me/avatar", avatar.single("avatar"), async (req, res) => {
+  res.send("Avatar Uploaded Sucessfully!");
 });
 
 // Endpoint to delete user

@@ -1,8 +1,18 @@
 const express = require("express");
+const multer = require("multer");
 require("./db/mongoose");
+
+// Uploaded File
+const upload = multer({
+  dest: "images",
+});
 
 const app = express();
 const port = process.env.PORT || 3000;
+
+app.post("/upload", upload.single("upload"), (req, res) => {
+  res.send("file uploaded sucessfully!");
+});
 
 // Allow incoming JSON from the body query
 app.use(express.json());
